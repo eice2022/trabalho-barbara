@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio e Saudações</title>
+
+    <!-- Manifest do PWA-->
+     <link rel="manifest" href="manifest.json">
+     <meta nome="theme-color" content="#000000">
+
+    <style>
+        body {
+            transition: background-color 1s;
+            font-family: Arial, sans-serif;
+            color: #111;
+            text-align: center;
+            padding-top: 70px;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 22px;
+            margin: 5px;
+        }
+
+        @media(max-width: 768px) {
+            body {
+                font-size: 28px;
+                padding-top: 50px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="conteiner">
+        <h1 id="titulo"></h1>
+        <p id="hora"></p>
+        <p id="data"></p>
+        <p id="frases"></p>
+        <p id="diatipo"></p>
+    </div>
+    
+    <!--<button onclick="atualizar()">Atualizar Agora</button>-->
+
+    <script>
+        let frases = [];
+
+        function atualizar() {
+            const agora = new Date();
+            const hora = agora.getHours();
+            const minutos = agora.getMinutes().toString().padStart(2, "0");
+            const segundos = agora.getSeconds().toString().padStart(2, "0");
+            const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dataFormatada = agora.toLocaleDateString("pt-BR", opcoes);
+            const diaSemana = agora.getDay();
+
+            let cor, mensagem;
+            let tipoDia;
+
+            if (hora >= 6 && hora < 12) {
+                cor = "#FFD700"; // manhã
+                mensagem = "Bom dia! ☀️";
+                frases = ["Vai precisar guarda-chuva?Não se esqueça dele", "Não Esqueça a marmita, o lanche tá caro", "Bom dia um lindo dia que te aguarda!"];
+            } else if (hora >= 12 && hora < 18) {
+                cor = "#FF8C00"; // tarde
+                mensagem = "Boa tarde! 🌅";
+                frases = ["Tá na hora do lanche?", "Bora aproveitar esse calorzinho tropical e aproveitar um picolé!", "Não tá esquecendo nada importante não?"];
+            } else if (hora >= 18 && hora < 24) {
+                cor = "#1E90FF"; // noite
+                mensagem = "Boa noite! 🌙";
+                frases = ["Já conferiu o clima para amanhã?", "Não Esqueça a marmita, o lanche tá caro", "Bom descanso! Ótimos sonhos com o lindo dia que te espera!"];
+            } else {
+                cor = "#2F4F4F"; // madrugada
+                mensagem = "Hora de descansar! 🌑";
+                frases = ["Isso lá é hora de estar on?", "Vá dormir, criatura, amanhã vc madruga", "Vá dormir!"];
+            } 
+
+            // Dia da semana
+            if (diaSemana === 0 || diaSemana === 6) {
+                tipodia = "🥳 Home é fim de semana! Aproveite para descansar."
+            } else {
+                tipoDia = "💼 Hoje é dia útil, foco nas atividades!"
+            }
+
+            document.body.style.backgroundColor = cor;
+            document.getElementById("titulo").innerHTML = mensagem;
+            document.getElementById("hora").innerHTML = `Agora são ${hora}:${minutos}:${segundos}`;
+            document.getElementById("data").innerHTML = dataFormatada;
+            document.getElementById("tipoDia").innerHTML = tipoDia;
+        }
+
+        // global
+        function trocarFrases() {
+            if (frases.length > 0) {
+                const fraseAleatoria = frases[Math.floor(Math.random() * frases.length)];
+                document.getElementById("frases").innerHTML = fraseAleatoria;
+            }
+        }
+
+        atualizar();
+        setInterval(atualizar, 1000); // atualiza hora
+        trocarFrases();
+        setInterval(trocarFrases, 5000); // troca frase
+    </script>
+    <script>
+        if ("serveWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("Service Worker Registrado"))
+            .catch(err => console.log(" Erro no SW:", err));
+        }
+    </script>
+    <script>
+        self.addEventListener("install", event => {
+    event.waiUntil(
+        caches.open("app-saudacao-cache").then(cache =>
+        {
+            return cache.addAll([
+                "index.html",
+                "manifest.json",
+                "icone-192.png",
+                "icon-512.png",
+                "manha.jpg",
+                "tarde.jpeg",
+                "noite.jpeg",
+                "madrugada.jpeg"
+            ]);
+        }
+        )
+    )
+})
+
+self.addEventiListener("fetch", event => {
+    event.respondiWith(
+        caches.match(event.request).then(response => response || fetch(event.request))
+    );
+});
+    </script>
+</body>
+
+</html>
